@@ -229,17 +229,20 @@ h2.script { font-family: var(--font-script); font-weight: 400; font-size: 58px; 
 .foot .tag { font-family: var(--font-caps); font-size: 12px; letter-spacing: .3em; color: var(--gold-lo); margin-top: 12px; }
 
 /* ---------- music ---------- */
-/* floating "scroll down" cue: appears after the envelope opens, fades once the guest starts scrolling */
-.scroll-cue { position: fixed; z-index: 41; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 20px);
-  display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 22px 8px; min-height: 48px;
-  border: 1.5px solid #f2d79a; border-radius: 999px; background: linear-gradient(180deg, #c94a6e, var(--rose-deep));
-  box-shadow: 0 10px 24px rgba(124,58,75,.38); color: #fff8f2; cursor: pointer;
-  font-family: var(--font-caps); font-size: 12px; letter-spacing: .26em; opacity: 0; pointer-events: none;
-  transition: opacity .6s ease, transform .6s ease; }
+/* floating scroll cue: a small gold capsule with a falling rose bead, on every section until the last one */
+.scroll-cue { position: fixed; z-index: 41; left: 50%; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 12px);
+  display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 30px 8px; border: 0; cursor: pointer;
+  background: radial-gradient(closest-side, rgba(255,247,240,.95) 40%, rgba(255,247,240,.7) 70%, rgba(255,247,240,0));
+  opacity: 0; pointer-events: none; transition: opacity .6s ease, transform .6s ease; }
 .scroll-cue.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
-.scroll-cue .te { font-family: var(--font-te); font-size: 12px; letter-spacing: 0; color: #ffe3ea; }
-.scroll-cue svg { width: 22px; height: 22px; animation: cueBob 1.6s ease-in-out infinite; }
-@keyframes cueBob { 0%, 100% { transform: translateY(-2px); opacity: .7; } 50% { transform: translateY(4px); opacity: 1; } }
+.scroll-cue .lbl { font-family: var(--font-caps); font-size: 9.5px; letter-spacing: .4em; padding-left: .4em; color: var(--wine);
+  text-shadow: 0 0 6px rgba(255,248,240,.95), 0 0 2px rgba(255,248,240,.95); }
+.scroll-cue .pill { position: relative; width: 24px; height: 38px; border-radius: 12px; border: 1.5px solid var(--gold);
+  background: rgba(255,250,246,.82); box-shadow: 0 4px 12px rgba(124,58,75,.18), inset 0 0 0 3px rgba(255,250,246,.6); backdrop-filter: blur(4px); }
+.scroll-cue .pill::before { content: ""; position: absolute; left: 50%; top: -5px; width: 7px; height: 7px; margin-left: -3.5px; transform: rotate(45deg); background: var(--gold); }
+.scroll-cue .pill i { position: absolute; left: 50%; top: 8px; width: 6px; height: 6px; margin-left: -3px; border-radius: 50%; background: var(--rose-deep); animation: cueBead 1.8s ease-in-out infinite; }
+@keyframes cueBead { 0% { transform: translateY(0); opacity: 0; } 20% { opacity: 1; } 75% { transform: translateY(14px); opacity: 1; } 100% { transform: translateY(16px); opacity: 0; } }
+.hero .scroll-hint { display: none; }
 .music { position: fixed; z-index: 40; left: calc(14px + env(safe-area-inset-left, 0px)); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--gold); background: rgba(255,250,246,.88); cursor: pointer; display: grid; place-items: center; backdrop-filter: blur(6px); box-shadow: 0 6px 16px rgba(124,58,75,.18); }
 .music .bars { display: flex; gap: 3px; align-items: flex-end; height: 18px; }
 .music .bars i { width: 3px; background: var(--rose-deep); height: 30%; border-radius: 1px; }
@@ -353,9 +356,8 @@ h2.script { font-family: var(--font-script); font-weight: 400; font-size: 58px; 
 </div>
 
 <button class="music" id="music" aria-label="Play music" aria-pressed="false"><span class="bars"><i></i><i></i><i></i></span></button>
-<button class="scroll-cue" id="scrollCue" type="button" aria-label="Scroll down to see the invitation">
-  <span>SCROLL DOWN</span><span class="te">కిందకు స్క్రోల్ చేయండి</span>
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/><path d="M6 4l6 6 6-6" opacity=".45"/></svg>
+<button class="scroll-cue" id="scrollCue" type="button" aria-label="Scroll to the next part of the invitation">
+  <span class="lbl">SCROLL</span><span class="pill"><i></i></span>
 </button>
 <canvas id="petals" aria-hidden="true"></canvas>
 
@@ -763,11 +765,23 @@ h2.script { font-family: var(--font-script); font-weight: 400; font-size: 58px; 
 
   // ---------- scroll-down cue ----------
   const cue = document.getElementById("scrollCue");
+  let cueReady = false;
+  const atEnd = () => innerHeight + scrollY >= document.documentElement.scrollHeight - 140;
+  const updateCue = () => { if (cueReady) cue.classList.toggle("show", !atEnd()); };
   cue.addEventListener("click", () => {
-    const next = document.querySelector(".invite");
-    next.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+    // glide to the next section below the top of the screen
+    const next = [...document.querySelectorAll("main .band")].find(b => b.getBoundingClientRect().top > 24);
+    if (next) next.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
   });
-  addEventListener("scroll", () => { if (scrollY > 80) cue.classList.remove("show"); }, { passive: true });
+  // stay out of the way while the page moves; come back once scrolling settles
+  let cueIdle = null;
+  addEventListener("scroll", () => {
+    if (!cueReady) return;
+    cue.classList.remove("show");
+    clearTimeout(cueIdle);
+    cueIdle = setTimeout(updateCue, 650);
+  }, { passive: true });
+  addEventListener("resize", updateCue);
 
   // ---------- open envelope ----------
   const env = document.getElementById("envelope");
@@ -780,7 +794,7 @@ h2.script { font-family: var(--font-script); font-weight: 400; font-size: 58px; 
     const r = document.getElementById("seal").getBoundingClientRect();
     shower(r.left + r.width / 2, r.top + r.height / 2, 60);
     setTimeout(() => { env.classList.add("leave"); document.body.classList.remove("locked"); petalsOn = true; }, reduce ? 50 : 2000);
-    setTimeout(() => { if (scrollY < 60) cue.classList.add("show"); }, reduce ? 100 : 2600);
+    setTimeout(() => { cueReady = true; updateCue(); }, reduce ? 100 : 2600);
     setTimeout(() => env.remove(), reduce ? 100 : 3200);
   }
   document.getElementById("seal").addEventListener("click", openEnvelope);
