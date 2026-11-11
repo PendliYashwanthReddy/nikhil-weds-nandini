@@ -229,6 +229,17 @@ h2.script { font-family: var(--font-script); font-weight: 400; font-size: 58px; 
 .foot .tag { font-family: var(--font-caps); font-size: 12px; letter-spacing: .3em; color: var(--gold-lo); margin-top: 12px; }
 
 /* ---------- music ---------- */
+/* floating "scroll down" cue: appears after the envelope opens, fades once the guest starts scrolling */
+.scroll-cue { position: fixed; z-index: 41; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 20px);
+  display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 22px 8px; min-height: 48px;
+  border: 1.5px solid #f2d79a; border-radius: 999px; background: linear-gradient(180deg, #c94a6e, var(--rose-deep));
+  box-shadow: 0 10px 24px rgba(124,58,75,.38); color: #fff8f2; cursor: pointer;
+  font-family: var(--font-caps); font-size: 12px; letter-spacing: .26em; opacity: 0; pointer-events: none;
+  transition: opacity .6s ease, transform .6s ease; }
+.scroll-cue.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+.scroll-cue .te { font-family: var(--font-te); font-size: 12px; letter-spacing: 0; color: #ffe3ea; }
+.scroll-cue svg { width: 22px; height: 22px; animation: cueBob 1.6s ease-in-out infinite; }
+@keyframes cueBob { 0%, 100% { transform: translateY(-2px); opacity: .7; } 50% { transform: translateY(4px); opacity: 1; } }
 .music { position: fixed; z-index: 40; left: calc(14px + env(safe-area-inset-left, 0px)); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--gold); background: rgba(255,250,246,.88); cursor: pointer; display: grid; place-items: center; backdrop-filter: blur(6px); box-shadow: 0 6px 16px rgba(124,58,75,.18); }
 .music .bars { display: flex; gap: 3px; align-items: flex-end; height: 18px; }
 .music .bars i { width: 3px; background: var(--rose-deep); height: 30%; border-radius: 1px; }
@@ -342,6 +353,10 @@ h2.script { font-family: var(--font-script); font-weight: 400; font-size: 58px; 
 </div>
 
 <button class="music" id="music" aria-label="Play music" aria-pressed="false"><span class="bars"><i></i><i></i><i></i></span></button>
+<button class="scroll-cue" id="scrollCue" type="button" aria-label="Scroll down to see the invitation">
+  <span>SCROLL DOWN</span><span class="te">కిందకు స్క్రోల్ చేయండి</span>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/><path d="M6 4l6 6 6-6" opacity=".45"/></svg>
+</button>
 <canvas id="petals" aria-hidden="true"></canvas>
 
 <main class="wrap">
@@ -746,6 +761,14 @@ h2.script { font-family: var(--font-script); font-weight: 400; font-size: 58px; 
   function stopMusic() { playing = false; setMusicUI(); fadeTo(0, 400, () => song.pause()); }
   mBtn.addEventListener("click", () => playing ? stopMusic() : startMusic());
 
+  // ---------- scroll-down cue ----------
+  const cue = document.getElementById("scrollCue");
+  cue.addEventListener("click", () => {
+    const next = document.querySelector(".invite");
+    next.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+  });
+  addEventListener("scroll", () => { if (scrollY > 80) cue.classList.remove("show"); }, { passive: true });
+
   // ---------- open envelope ----------
   const env = document.getElementById("envelope");
   document.body.classList.add("locked");
@@ -757,6 +780,7 @@ h2.script { font-family: var(--font-script); font-weight: 400; font-size: 58px; 
     const r = document.getElementById("seal").getBoundingClientRect();
     shower(r.left + r.width / 2, r.top + r.height / 2, 60);
     setTimeout(() => { env.classList.add("leave"); document.body.classList.remove("locked"); petalsOn = true; }, reduce ? 50 : 2000);
+    setTimeout(() => { if (scrollY < 60) cue.classList.add("show"); }, reduce ? 100 : 2600);
     setTimeout(() => env.remove(), reduce ? 100 : 3200);
   }
   document.getElementById("seal").addEventListener("click", openEnvelope);
