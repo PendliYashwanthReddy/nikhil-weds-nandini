@@ -87,7 +87,15 @@ h2.script { font-family: var(--font-script); font-weight: 400; font-size: 58px; 
 .invocation { font-family: var(--font-te); font-weight: 500; color: var(--gold-lo); font-size: 14.5px; letter-spacing: .03em; margin: 2px 0 0; }
 .arch-box { position: relative; width: 100%; max-width: 420px; margin: 14px auto 0; aspect-ratio: 400 / 540; }
 .arch-box > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-.arch-text { position: absolute; inset: 17% 13% 14%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+/* text sized from the arch's own width (cqw) and kept below the curved top, so it always sits in the middle of the arch */
+.arch-box { container-type: inline-size; }
+.arch-text { position: absolute; inset: 25% 15% 15%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.arch-text .subvah { font-size: 8.4cqw; }
+.arch-text .lead { font-size: 4cqw; margin: .6cqw 0 1.4cqw; }
+.arch-text .names .n { font-size: 15cqw; }
+.arch-text .names .te-n { font-size: 3.4cqw; }
+.arch-text .names .amp { font-size: 9cqw; margin: 1cqw 0 .4cqw; }
+.arch-text .date-chip { font-size: 3.7cqw; margin-top: 3.6cqw; gap: 2.8cqw; }
 .subvah { font-family: var(--font-te-display); color: var(--wine); font-size: clamp(30px, 9vw, 38px); margin: 0; line-height: 1.25; }
 .lead { font-style: italic; font-size: 17px; color: var(--ink-soft); margin: 4px 0 6px; }
 .names { margin: 0; font-weight: 400; }
